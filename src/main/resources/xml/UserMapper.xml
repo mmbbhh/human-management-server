@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mmbbhh.management.mapper.UserMapper">
+    <select id="loadUserByUsername" resultType="com.mmbbhh.management.model.User">
+        SELECT *
+        FROM manage_user_role
+                 LEFT JOIN (manage_user_department LEFT JOIN manage_user ON manage_user.id = manage_user_department.uid)
+                           ON manage_user_role.uid = manage_user.id
+        WHERE user_name = #{username}
+    </select>
+    <select id="getUserRolesByUid" resultType="com.mmbbhh.management.model.Role">
+        SELECT *
+        FROM manage_role r,
+             manage_user_role ur
+        WHERE r.id = ur.rid
+          AND ur.uid = #{id}
+    </select>
+    <select id="getUserInfo" resultType="map">
+        SELECT manage_user.user_phone,
+               manage_role.name,
+               manage_user.name as Tname,
+               rid, did,
+               manage_department.nameZh as nameD,
+               manage_role.nameZh       as nameR,
+               img_url
+        FROM manage_user,
+             manage_user_role,
+             manage_role,
+             manage_user_department,
+             manage_department
+        WHERE manage_user.id = manage_user_role.uid
+          AND manage_role.id = manage_user_role.rid
+          AND manage_user.id = manage_user_department.uid
+          AND manage_department.id = manage_user_department.did
+          AND user_name = #{username}
+    </select>
+    <update id="editUserInfo" parameterType="com.mmbbhh.management.model.User">
+        update manage_user
+        SET user_pwd   = #{password},
+            user_phone = #{phone},
+            img_url    = #{imgUrl}
+        where id = #{id}
+    </update>
+    <select id="allUser" resultType="map">
+        SELECT workid, manage_user.name, manage_department.id, manage_role.id as rid,
+               manage_department.nameZh as Dname, manage_role.nameZh as Rname,
+               user_name, user_phone, user_age,
+               user_sex, user_pay, user_addr FROM manage_user,
+                      manage_department,
+                      manage_user_department,
+                      manage_role,
+                      manage_user_role
+        WHERE manage_user.id = manage_user_department.uid
+          AND manage_user_department.did = manage_department.id
+          AND manage_user.id = manage_user_role.uid
+          AND manage_user_role.rid = manage_role.id
+          AND manage_user.enabled = 1
+    </select>
+    <select id="ifExist" resultType="int">
+        SELECT COUNT(*) FROM manage_user WHERE user_name = #{username}
+    </select>
+    <update id="delUser" parameterType="com.mmbbhh.management.model.User">
+        update manage_user
+        SET enabled = 0
+        where workid = #{id}
+    </update>
+    <update id="editUser" parameterType="com.mmbbhh.management.model.User">
+        UPDATE
+            manage_user
+                LEFT JOIN manage_user_role ON manage_user_role.uid = manage_user.id
+                LEFT JOIN manage_user_department ON manage_user_department.uid = manage_user.id
+        SET name = #{user.name}, user_name = #{user.user_name},  user_phone = #{user.tel}, user_age = #{user.age}, user_sex = #{user.sex}, user_pay = #{user.pay}, user_addr = #{user.addr}, rid = #{rid}, did = #{did}
+        WHERE manage_user.workid = #{user.id}
+    </update>
+    <select id="userNum" resultType="int">
+        SELECT COUNT(*)+1 FROM manage_user_department WHERE did = #{id}
+    </select>
+    <insert id="addUser">
+        INSERT INTO manage_user(workid, name, user_name, user_pwd, user_phone, user_age, user_sex, user_pay, user_addr, enabled, locked)
+        VALUES (#{workid}, #{user.name}, #{user.user_name}, #{password}, #{user.tel}, #{user.age}, #{user.sex}, #{user.pay}, #{user.addr}, 1, 0)
+    </insert>
+    <select id="userId" resultType="int">
+        SELECT id FROM manage_user WHERE user_name = #{username}
+    </select>
+    <insert id="addRole">
+        INSERT INTO manage_user_role(uid, rid)
+        VALUES (#{uid}, #{rid})
+    </insert>
+    <insert id="addDep">
+        INSERT INTO manage_user_department(uid, did)
+        VALUES (#{uid}, #{did})
+    </insert>
+    <select id="userPay" resultType="com.mmbbhh.management.model.Financial">
+        SELECT manage_user.id, workid, name, user_pay, num
+        FROM manage_user
+            LEFT JOIN (select uid,count(*) as num from manage_sign WHERE month(date) = #{month} AND `check` = 1 group by uid) as C
+                ON manage_user.id = c.uid
+    </select>
+</mapper>

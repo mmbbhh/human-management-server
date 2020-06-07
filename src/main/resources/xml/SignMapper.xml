@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mmbbhh.management.mapper.SignMapper">
+    <insert id="sign">
+        insert INTO manage_sign(uid, date, `check`)
+        VALUES (#{id}, #{date}, #{bol})
+    </insert>
+    <select id="allCSign" resultType="String">
+        SELECT substring(date, 1, 10)
+        from manage_sign
+        WHERE uid = #{id}
+          AND SUBSTRING(date, 6, 2) = #{month}
+          AND `check` = 1
+    </select>
+    <select id="allRSign" resultType="String">
+        SELECT substring(date, 1, 10)
+        from manage_sign
+        WHERE uid = #{id}
+          AND SUBSTRING(date, 6, 2) = #{month}
+          AND `check` = -1
+    </select>
+    <select id="getUserInfo" resultType="map">
+        SELECT manage_user.name, date, manage_sign.id
+        FROM manage_sign,
+             manage_user,
+             manage_user_department
+        WHERE manage_sign.uid = manage_user.id
+          AND manage_user_department.uid = manage_user.id
+          AND manage_sign.`check` = 0
+          AND did = (SELECT did FROM manage_user_department WHERE manage_user_department.uid = #{id})
+    </select>
+    <update id="submitSign">
+        UPDATE manage_sign SET manage_sign.`check` = #{type} WHERE manage_sign.id = #{id}
+    </update>
+</mapper>

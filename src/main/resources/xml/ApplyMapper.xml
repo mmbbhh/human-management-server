@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mmbbhh.management.mapper.ApplyMapper">
+    <select id="getApply" resultType="com.mmbbhh.management.model.Apply">
+        SELECT manage_message.*, user_name
+        FROM manage_message,
+             manage_user
+        WHERE uid = #{id}
+          AND manage_message.uid = manage_user.id
+        ORDER BY manage_message.date desc
+    </select>
+    <insert id="apply">
+        INSERT INTO manage_message(message, uid, `check`, date, title)
+        VALUES (#{message}, #{id}, 0, #{date}, #{title})
+    </insert>
+    <select id="staff" resultType="com.mmbbhh.management.model.Apply">
+        SELECT manage_message.*, user_name
+        FROM manage_message,
+             manage_user
+        WHERE uid in (SELECT uid FROM manage_user_department WHERE did = #{id})
+          AND manage_message.uid = manage_user.id
+        ORDER BY manage_message.date desc
+    </select>
+    <update parameterType="com.mmbbhh.management.model.Apply" id="applyCheck">
+        update manage_message
+        SET `check` = #{state},
+            reason = #{reason}
+        where id = #{id}
+    </update>
+</mapper>
